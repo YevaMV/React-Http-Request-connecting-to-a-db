@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import MoviesList from './components/MoviesList';
 import './App.css';
+import AddMovie from './components/AddMovie';
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -10,7 +11,7 @@ function App() {
 
   function fetchMoviesHandler() {
     setIsLoading(true);
-    fetch('https://swapi.dev/api/film/')
+    fetch('https://react-http-8ed8b-default-rtdb.firebaseio.com/movies.json')
       .then((response) => {
         if (!response.ok) {
           throw Error('Something went wrong!');
@@ -18,15 +19,16 @@ function App() {
         return response.json();
       })
       .then((data) => {
-        const transformedMovies = data.results.map((movieData) => {
-          return {
-            id: movieData.episode_id,
-            title: movieData.title,
-            openingText: movieData.opening_crawl,
-            releaseDate: movieData.release_date,
-          };
-        });
-        setMovies(transformedMovies);
+        const loadedMovies = [];
+        for (const key in data) {
+          loadedMovies.push({
+            id: key,
+            title: data[key].title,
+            openingText: data[key].openingText,
+            releaseDate: data[key].releaseDate,
+          });
+        }
+        setMovies(loadedMovies);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -34,8 +36,22 @@ function App() {
         setIsLoading(false);
       });
   }
+
+  function addMovieHandler(movie) {
+    fetch('https://react-http-8ed8b-default-rtdb.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
